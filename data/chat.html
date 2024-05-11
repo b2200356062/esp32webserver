@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <script src="chat.js"></script>         
+   </head>
+  
+   <body>
+      <div>
+        <input type = "text" id = "nameText"></input>
+        <button onclick = "OpenWebsocket()" id = "connectButton">CONNECT</button>
+      </div>
+      <div id = "chatDiv">
+      </div>
+      <div>
+         <input type = "text" disabled id = "inputText"></input>
+         <button onclick = "SendData()"  disabled id = "sendButton">SEND</button>
+      </div>
+      <div>
+         <button onclick = "CloseWebsocket()" disabled id = "disconnectButton">DISCONNECT</button>
+      </div>
+   </body>
+</html>
