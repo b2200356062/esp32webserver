@@ -1,22 +1,27 @@
 <!DOCTYPE html>
 <html>
    <head>
-      <script src="chat.js"></script>         
+      <script src="chat.js"></script>
+      <link rel="stylesheet" href="chat.css">
    </head>
-  
-   <body>
-      <div>
-        <input type = "text" id = "nameText"></input>
-        <button onclick = "OpenWebsocket()" id = "connectButton">CONNECT</button>
+   <body >
+      <div class="title">
+         <h1>ESP32 CHAT</h1>
       </div>
-      <div id = "chatDiv">
-      </div>
-      <div>
-         <input type = "text" disabled id = "inputText"></input>
-         <button onclick = "SendData()"  disabled id = "sendButton">SEND</button>
-      </div>
-      <div>
-         <button onclick = "CloseWebsocket()" disabled id = "disconnectButton">DISCONNECT</button>
+      <div class = "main-container">
+         <div class = "u-display--flex connect-row">
+            <input type = "text" id = "nameText"  class = "text-input u-flex-grow--1"></input>
+            <button onclick = "OpenWebsocket()" id = "connectButton" class="btn">CONNECT</button>
+            <button onclick = "CloseWebsocket()" disabled id = "disconnectButton" class="btn">DISCONNECT</button>
+         </div>
+         <div class="chat-container">
+            <div id = "chatDiv" class="chat">               
+            </div>
+         </div>
+         <div class = "u-display--flex">
+            <input type = "text" disabled id = "inputText" class="text-input u-flex-grow--1"></input>
+            <button onclick = "SendData()"  disabled id = "sendButton" class="btn">SEND</button>
+         </div>
       </div>
    </body>
 </html>

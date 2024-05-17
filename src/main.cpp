@@ -3,6 +3,7 @@
 #include <SPIFFS.h>
 #include <algorithm>
 #include <PubSubClient.h>
+#include <nlohmann/json.hpp>
  
 const char* ssid = "telefon";
 const char* password =  "123456789";
@@ -12,7 +13,8 @@ const char* mqttusername = "emqx";
 const char* mqttpassword = "public";
 const char* topic = "topic/mqttx";
 const int mqttport = 1883;
-  
+const char* ntpServer = "time.google.com";
+
 AsyncWebServer server(80);
 AsyncWebSocket ws("/chat");
 
@@ -34,6 +36,23 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
   } else if(type == WS_EVT_DATA){
 
     Serial.print("Data received: ");
+
+    struct tm time;
+    
+    if(!getLocalTime(&time)){
+      Serial.println("Could not obtain time info");
+      return;
+    }
+ 
+    char buffer[80];
+    strftime(buffer, sizeof(buffer), "%H:%M:%S", &time);
+ 
+    nlohmann::json obj = nlohmann::json::parse(data, data+len);
+    obj["timestamp"] = buffer;
+ 
+    std::string serializedObject = obj.dump();
+ 
+    ws.textAll(serializedObject.c_str(), serializedObject.length());
 
     message = (uint8_t*) malloc((len+1) * sizeof(uint8_t));
   
@@ -60,7 +79,7 @@ void callback(char *topic, byte *payload, unsigned int length) {
     for (int i = 0; i < length; i++) {
         message += (char) payload[i];
     }
-    ws.textAll(message);
+    //ws.textAll(message);
 }
 
 void setup(){
@@ -80,6 +99,8 @@ void setup(){
   
   Serial.println(WiFi.localIP());
   
+  configTime(0, 3600, ntpServer);
+
   ws.onEvent(onWsEvent);
   server.addHandler(&ws);
  
@@ -89,6 +110,10 @@ void setup(){
   
   server.on("/chat.js", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(SPIFFS, "/chat.js", "text/javascript");
+  });
+
+  server.on("/chat.css", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, "/chat.css", "text/css");
   });
  
   server.begin();
