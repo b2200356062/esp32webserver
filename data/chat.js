@@ -40,14 +40,23 @@ function OpenWebsocket() {
     };
     
     ws.onmessage = function(event) {
-     
-         const receivedObj = JSON.parse(event.data);
-            
-         const chatLine = GetChatLine(receivedObj);
-            
-         const chatDiv = document.getElementById("chatDiv");            
-         chatDiv.appendChild(chatLine);
-          
+
+        console.log(event.data);
+
+        const lastSpaceIndex = event.data.lastIndexOf(' ');
+        const jsonString = event.data.substring(0, lastSpaceIndex);
+        const timestamp = event.data.substring(lastSpaceIndex + 1) || ""; // If there's no timestamp, set it to an empty string
+    
+        // Parse the JSON string
+        const receivedObj = JSON.parse(jsonString);
+    
+        // Add the timestamp to the parsed object
+        receivedObj.timestamp = timestamp;
+    
+        const chatLine = GetChatLine(receivedObj);
+    
+        const chatDiv = document.getElementById("chatDiv");            
+        chatDiv.appendChild(chatLine);
     };
  }
  
