@@ -47,18 +47,6 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
       return;
     }
 
-    time.tm_hour += 2;
-
-    char buffer[80];
-    strftime(buffer, sizeof(buffer), "%H:%M:%S", &time);
- 
-    nlohmann::json obj = nlohmann::json::parse(data, data+len);
-    obj["timestamp"] = buffer;
- 
-    timeObject = obj.dump();
- 
-    //ws.textAll(timeObject.c_str(), timeObject.length());
-
     message = (uint8_t*) malloc((len+1) * sizeof(uint8_t));
   
     for(int i=0; i < len; i++) 
@@ -83,30 +71,30 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
   
 void callback(char *topic, byte *payload, unsigned int length) 
 {
+  
+  // get message from javascript
   String message;
   for (int i = 0; i < length; i++) {
-      message += (char) payload[i];
+    message += (char) payload[i];
   }
 
   struct tm timeinfo;
   if(!getLocalTime(&timeinfo)){
-      Serial.println("Failed to obtain time");
-      return;
+    Serial.println("Failed to obtain time");
+    return;
   }
 
-  // google time difference
+  // google time difference fix
   timeinfo.tm_hour += 2;
 
-  // Convert the time to a string
   char buffer[80];
+
   strftime(buffer, sizeof(buffer), "%H:%M:%S", &timeinfo);
   String timestamp = buffer;
 
-  // Add the timestamp to the message
   message += " ";
   message += timestamp;
 
-  // Send the message to the WebSocket
   ws.textAll(message);
 }
 
