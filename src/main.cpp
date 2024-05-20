@@ -5,8 +5,8 @@
 #include <PubSubClient.h>
 #include <nlohmann/json.hpp>
  
-const char* ssid = "telefon";
-const char* password =  "123456789";
+const char* ssid = "fortnite sussy balls";
+const char* password =  "vfYggwmeKTAw";
 
 const char* mqtt_server = "broker.emqx.io";
 const char* mqttusername = "emqx";
@@ -22,6 +22,25 @@ std::string timeObject = "";
 
 WiFiClient espClient;
 PubSubClient mqttclient(espClient);
+
+struct User {
+  std::string username;
+  std::string password;
+};
+
+User validUsers[] = {
+  {"admin", "admin"},
+  {"user1", "user1"}
+};
+
+bool checkCredentials(std::string username, std::string password) {
+    for (User user : validUsers) {
+        if (user.username == username && user.password == password) {
+            return true;
+        }
+    }
+    return false;
+}
 
 void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
   
@@ -39,7 +58,47 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
   {
     Serial.print("Data received: ");
 
-    struct tm time;
+    String messageText = "";
+    
+    for(size_t i=0; i < len; i++) {
+      messageText += (char) data[i];
+    }
+
+    nlohmann::json receivedObj = nlohmann::json::parse(messageText.c_str());
+    int msgType = receivedObj["type"];
+
+    if (msgType == 0) {
+      std::string username = receivedObj["name"];
+      std::string password = receivedObj["password"];
+      nlohmann::json response;
+      response["type"] = 0;
+
+      if (checkCredentials(username, password)) {
+        response["success"] = true;
+        client->text(response.dump().c_str());
+
+        /*
+        struct tm timeinfo;
+        if (getLocalTime(&timeinfo)) {
+          char buffer[80];
+          strftime(buffer, sizeof(buffer), "%H:%M:%S", &timeinfo);
+          String timestamp = buffer;
+
+          nlohmann::json joinMessage;
+          joinMessage["type"] = 1;
+          joinMessage["name"] = username;
+          String joinMsgWithTimestamp = joinMessage.dump() + " " + timestamp;
+          ws.textAll(joinMsgWithTimestamp.c_str());
+        }
+        */
+      } else {
+        response["success"] = false;
+        client->text(response.dump().c_str());
+        client->close();
+      }
+
+    } else {
+      struct tm time;
     
     if(!getLocalTime(&time))
     {
@@ -66,6 +125,9 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
     message = nullptr; 
 
     Serial.println();
+    }
+    
+    
   }
 }
   
