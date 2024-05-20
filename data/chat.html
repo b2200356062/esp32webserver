@@ -4,23 +4,25 @@
       <script src="chat.js"></script>
       <link rel="stylesheet" href="chat.css">
    </head>
-   <body >
+   <body>
       <div class="title">
          <h1>Chat Application with ESP32 and MQTT</h1>
       </div>
-      <div class = "main-container">
-         <div class = "u-display--flex connect-row">
-            <input type = "text" id = "nameText"  class = "text-input u-flex-grow--1"></input>
-            <button onclick = "OpenWebsocket()" id = "connectButton" class="btn">CONNECT</button>
-            <button onclick = "CloseWebsocket()" disabled id = "disconnectButton" class="btn">DISCONNECT</button>
+      <div class="main-container">
+         <div class="u-display--flex connect-row">
+            <input type="text" id="nameText" placeholder="Username" class="text-input u-flex-grow--1">
+            <input type="password" id="passText" placeholder="Password" class="text-input u-flex-grow--1">
+         </div>
+         <div class="u-display--flex connect-row">
+            <button onclick="OpenWebsocket()" id="connectButton" class="btn">CONNECT</button>
+            <button onclick="CloseWebsocket()" disabled id="disconnectButton" class="btn">DISCONNECT</button>
          </div>
          <div class="chat-container">
-            <div id = "chatDiv" class="chat">               
-            </div>
+            <div id="chatDiv" class="chat"></div>
          </div>
-         <div class = "u-display--flex">
-            <input type = "text" disabled id = "inputText" class="text-input u-flex-grow--1"></input>
-            <button onclick = "SendData()"  disabled id = "sendButton" class="btn">SEND</button>
+         <div class="u-display--flex">
+            <input type="text" disabled id="inputText" class="text-input u-flex-grow--1">
+            <button onclick="SendData()" disabled id="sendButton" class="btn">SEND</button>
          </div>
       </div>
    </body>

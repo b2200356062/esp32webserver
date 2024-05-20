@@ -7,25 +7,30 @@ function OpenWebsocket() {
  
     name = nameTextElement.value;
     nameTextElement.value = '';
-     
+
+    const passTextElement = document.getElementById("passText");
+
+    let password = passTextElement.value;
+    passTextElement.value = '';
+
+    if (!name || !password) {
+        alert("Please enter both username and password");
+        return;
+    }
+
     const url = `ws://${location.hostname}/chat`;   
     ws = new WebSocket(url);
  
     ws.onopen = function() {
-                 
-        document.getElementById("inputText").disabled = false;
-        document.getElementById("sendButton").disabled = false;
-        document.getElementById("disconnectButton").disabled = false;
-        document.getElementById("connectButton").disabled = true;
-        document.getElementById("nameText").disabled = true;  
- 
-        const objToSend = {
-            type: 1,
-            name: name
-        }
-         
-        const serializedObj = JSON.stringify(objToSend);    
-        ws.send(serializedObj);     
+
+        const authMessage = JSON.stringify({
+            type: 0,
+            name: name,
+            password: password
+        });
+
+        ws.send(authMessage);
+   
     };
  
     ws.onclose = function() {
@@ -35,28 +40,54 @@ function OpenWebsocket() {
         document.getElementById("disconnectButton").disabled = true; 
         document.getElementById("connectButton").disabled = false;
         document.getElementById("nameText").disabled = false;
+        document.getElementById("passText").disabled = false; 
  
         document.getElementById("chatDiv").innerHTML = '';  
     };
     
     ws.onmessage = function(event) {
 
-        console.log(event.data);
+        if (event.data.includes("\"type\":0")) {
+            const data = JSON.parse(event.data);
+            if (data.success === false) {
+                alert("Wrong login");
+                ws.close();
+                return;
+            } else {
+                document.getElementById("inputText").disabled = false;
+                document.getElementById("sendButton").disabled = false;
+                document.getElementById("disconnectButton").disabled = false;
+                document.getElementById("connectButton").disabled = true;
+                document.getElementById("nameText").disabled = true;
+                document.getElementById("passText").disabled = true;  
 
-        const lastSpaceIndex = event.data.lastIndexOf(' ');
-        const jsonString = event.data.substring(0, lastSpaceIndex);
-        const timestamp = event.data.substring(lastSpaceIndex + 1) || ""; // If there's no timestamp, set it to an empty string
+                // Send type 1 message after successful authentication
+                const joinMessage = JSON.stringify({
+                    type: 1,
+                    name: name
+                });
+                ws.send(joinMessage);
+            }
+        } else {
+            console.log(event.data);
+
+            const lastSpaceIndex = event.data.lastIndexOf(' ');
+            const jsonString = event.data.substring(0, lastSpaceIndex);
+            const timestamp = event.data.substring(lastSpaceIndex + 1) || ""; // If there's no timestamp, set it to an empty string
     
-        // Parse the JSON string
-        const receivedObj = JSON.parse(jsonString);
+            // Parse the JSON string
+            const receivedObj = JSON.parse(jsonString);
     
-        // Add the timestamp to the parsed object
-        receivedObj.timestamp = timestamp;
+            // Add the timestamp to the parsed object
+            receivedObj.timestamp = timestamp;
     
-        const chatLine = GetChatLine(receivedObj);
+            const chatLine = GetChatLine(receivedObj);
     
-        const chatDiv = document.getElementById("chatDiv");            
-        chatDiv.appendChild(chatLine);
+            const chatDiv = document.getElementById("chatDiv");            
+            chatDiv.appendChild(chatLine);
+        }
+
+        
     };
  }
  
