@@ -5,23 +5,24 @@
 #include <PubSubClient.h>
 #include <nlohmann/json.hpp>
  
-const char* ssid = "fortnite sussy balls";
-const char* password =  "vfYggwmeKTAw";
+const char* ssid = "YourSSID";                  //CHANGE
+const char* password =  "YourPassword";         //CHANGE 
 
-const char* mqtt_server = "broker.emqx.io";
-const char* mqttusername = "emqx";
-const char* mqttpassword = "public";
+const char* mqttServer = "broker.emqx.io";
+const char* mqttUsername = "emqx";
+const char* mqttPassword = "public";
 const char* topic = "topic/mqttx";
-const int mqttport = 1883;
+const int mqttPort = 1883;
+
 const char* ntpServer = "time.google.com";
 
 AsyncWebServer server(80);
-AsyncWebSocket ws("/chat");
+AsyncWebSocket socket("/chat");
 
 std::string timeObject = "";
 
 WiFiClient espClient;
-PubSubClient mqttclient(espClient);
+PubSubClient mqttClient(espClient);
 
 struct User {
   std::string username;
@@ -30,29 +31,33 @@ struct User {
 
 User validUsers[] = {
   {"admin", "admin"},
-  {"user1", "user1"}
+  {"user1", "user1"},
+  {"melih", "12345"},
+  {"mcoach", "56789"}
 };
 
 bool checkCredentials(std::string username, std::string password) {
+    
     for (User user : validUsers) {
         if (user.username == username && user.password == password) {
             return true;
         }
     }
+    
     return false;
 }
 
-void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
+void onSocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
   
   uint8_t* message = nullptr;
 
   if(type == WS_EVT_CONNECT)
   {
-    Serial.println("Websocket client connection received");
+    Serial.println("Websocket client connection received.");
   } 
   else if(type == WS_EVT_DISCONNECT)
   {
-    Serial.println("Client disconnected");
+    Serial.println("Client disconnected.");
   } 
   else if(type == WS_EVT_DATA)
   {
@@ -68,6 +73,7 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
     int msgType = receivedObj["type"];
 
     if (msgType == 0) {
+      // Authentication request
       std::string username = receivedObj["name"];
       std::string password = receivedObj["password"];
       nlohmann::json response;
@@ -116,9 +122,9 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
 
     message[len] = '\0'; 
 
-    if(mqttclient.connected())
+    if(mqttClient.connected())
     {
-      mqttclient.publish("topic/mqttx", (const char*)message);
+      mqttClient.publish("topic/mqttx", (const char*)message);
     }
 
     free(message); 
@@ -142,12 +148,9 @@ void callback(char *topic, byte *payload, unsigned int length)
 
   struct tm timeinfo;
   if(!getLocalTime(&timeinfo)){
-    Serial.println("Failed to obtain time");
+    Serial.println("Failed to obtain time.");
     return;
   }
-
-  // google time difference fix
-  timeinfo.tm_hour += 2;
 
   char buffer[80];
 
@@ -157,7 +160,7 @@ void callback(char *topic, byte *payload, unsigned int length)
   message += " ";
   message += timestamp;
 
-  ws.textAll(message);
+  socket.textAll(message);
 }
 
 void setup(){
@@ -165,24 +168,24 @@ void setup(){
   
   if(!SPIFFS.begin())
   {
-    Serial.println("An Error has occurred while mounting SPIFFS");
+    Serial.println("An error has occurred while mounting SPIFFS.");
     return;
   }
  
   WiFi.begin(ssid, password);
-  
   while (WiFi.status() != WL_CONNECTED) 
   {
     delay(1000);
-    Serial.println("Connecting to WiFi..");
+    Serial.println("Connecting to WiFi...");
   }
-  
   Serial.println(WiFi.localIP());
   
-  configTime(0, 3600, ntpServer);
+  // UTC+3
+  configTime(10800, 0, ntpServer);
 
-  ws.onEvent(onWsEvent);
-  server.addHandler(&ws);
+  // Setup local server
+  socket.onEvent(onSocketEvent);
+  server.addHandler(&socket);
  
   server.on("/chat", HTTP_GET, [](AsyncWebServerRequest *request)
   {
@@ -201,31 +204,32 @@ void setup(){
  
   server.begin();
 
-  mqttclient.setServer(mqtt_server, mqttport);
+  // Setup MQTT
+  mqttClient.setServer(mqttServer, mqttPort);
 
-  mqttclient.setCallback(callback);
+  mqttClient.setCallback(callback);
   
-  while (!mqttclient.connected()) {
+  while (!mqttClient.connected()) {
 
       String client_id = "esp32-client-";
       client_id += String(WiFi.macAddress());
-      Serial.printf("The client %s connects to the public MQTT broker\n", client_id.c_str());
+      Serial.printf("The client %s connects to the public MQTT broker...\n", client_id.c_str());
 
-      if (mqttclient.connect(client_id.c_str(), mqttusername, mqttpassword)) 
+      if (mqttClient.connect(client_id.c_str(), mqttUsername, mqttPassword)) 
       {
-        Serial.println("Public EMQX MQTT broker connected");
+        Serial.println("Public EMQX MQTT broker connected.");
       } 
       else 
       {
         Serial.print("failed with state ");
-        Serial.print(mqttclient.state());
+        Serial.print(mqttClient.state());
         Serial.print(" ");
         delay(2000);
       }
   }  
-  mqttclient.subscribe(topic);
+  mqttClient.subscribe(topic);
 }
 
 void loop(){
-  mqttclient.loop();
+  mqttClient.loop();
 }
