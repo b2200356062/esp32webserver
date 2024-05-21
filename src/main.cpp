@@ -5,8 +5,8 @@
 #include <PubSubClient.h>
 #include <nlohmann/json.hpp>
  
-const char* ssid = "YourSSID";                  //CHANGE
-const char* password =  "YourPassword";         //CHANGE 
+const char* ssid = "telefon";            //CHANGE
+const char* password =  "123456789";     //CHANGE 
 
 const char* mqttServer = "broker.emqx.io";
 const char* mqttUsername = "emqx";
@@ -73,7 +73,8 @@ void onSocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEv
     int msgType = receivedObj["type"];
 
     if (msgType == 0) {
-      // Authentication request
+
+      // authentication request
       std::string username = receivedObj["name"];
       std::string password = receivedObj["password"];
       nlohmann::json response;
@@ -83,57 +84,45 @@ void onSocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEv
         response["success"] = true;
         client->text(response.dump().c_str());
 
-        /*
-        struct tm timeinfo;
-        if (getLocalTime(&timeinfo)) {
-          char buffer[80];
-          strftime(buffer, sizeof(buffer), "%H:%M:%S", &timeinfo);
-          String timestamp = buffer;
-
-          nlohmann::json joinMessage;
-          joinMessage["type"] = 1;
-          joinMessage["name"] = username;
-          String joinMsgWithTimestamp = joinMessage.dump() + " " + timestamp;
-          ws.textAll(joinMsgWithTimestamp.c_str());
-        }
-        */
       } else {
         response["success"] = false;
         client->text(response.dump().c_str());
         client->close();
       }
 
-    } else {
+    } 
+    else {
+
+      // get time zone
       struct tm time;
     
-    if(!getLocalTime(&time))
-    {
-      Serial.println("Could not obtain time info");
-      return;
-    }
+      if(!getLocalTime(&time))
+      {
+        Serial.println("Could not obtain time info");
+        return;
+      }
 
-    message = (uint8_t*) malloc((len+1) * sizeof(uint8_t));
-  
-    for(int i=0; i < len; i++) 
-    {
-      Serial.print((char) data[i]);
-      message[i] = data[i];
-    }
-
-    message[len] = '\0'; 
-
-    if(mqttClient.connected())
-    {
-      mqttClient.publish("topic/mqttx", (const char*)message);
-    }
-
-    free(message); 
-    message = nullptr; 
-
-    Serial.println();
-    }
+      // carry message to mqtt from websockets
+      message = (uint8_t*) malloc((len+1) * sizeof(uint8_t));
     
-    
+      for(int i=0; i < len; i++) 
+      {
+        Serial.print((char) data[i]);
+        message[i] = data[i];
+      }
+
+      message[len] = '\0'; 
+
+      if(mqttClient.connected())
+      {
+        mqttClient.publish("topic/mqttx", (const char*)message);
+      }
+
+      free(message); 
+      message = nullptr; 
+
+      Serial.println();
+    }
   }
 }
   
@@ -147,7 +136,8 @@ void callback(char *topic, byte *payload, unsigned int length)
   }
 
   struct tm timeinfo;
-  if(!getLocalTime(&timeinfo)){
+  if(!getLocalTime(&timeinfo))
+  {
     Serial.println("Failed to obtain time.");
     return;
   }
@@ -173,6 +163,7 @@ void setup(){
   }
  
   WiFi.begin(ssid, password);
+
   while (WiFi.status() != WL_CONNECTED) 
   {
     delay(1000);
@@ -180,10 +171,10 @@ void setup(){
   }
   Serial.println(WiFi.localIP());
   
-  // UTC+3
+  // utc+3 convertion
   configTime(10800, 0, ntpServer);
 
-  // Setup local server
+  // setup local web server
   socket.onEvent(onSocketEvent);
   server.addHandler(&socket);
  
@@ -204,7 +195,7 @@ void setup(){
  
   server.begin();
 
-  // Setup MQTT
+  // setup MQTT connection
   mqttClient.setServer(mqttServer, mqttPort);
 
   mqttClient.setCallback(callback);

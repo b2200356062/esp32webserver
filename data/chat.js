@@ -21,7 +21,7 @@ function OpenWebSocket() {
  
     socket.onopen = function() {
 
-        // Send authentication request
+        // send authentication request
         const authMessage = JSON.stringify({
             type: 0,
             name: name,
@@ -29,11 +29,10 @@ function OpenWebSocket() {
         });
 
         socket.send(authMessage);
-   
     };
  
-    socket.onclose = function() {
-    
+    socket.onclose = function() 
+    {
         document.getElementById("inputText").disabled = true;
         document.getElementById("sendButton").disabled = true;        
         document.getElementById("disconnectButton").disabled = true; 
@@ -41,15 +40,13 @@ function OpenWebSocket() {
         document.getElementById("nameText").disabled = false;
         document.getElementById("password").disabled = false; 
         document.getElementById("chatDiv").innerHTML = '';  
-
     };
     
     socket.onmessage = function(event) {
 
-        // Check if the message is a response to authentication request
+        // check if the message is a response to authentication request
         if (event.data.includes("\"type\":0"))
         {
-            
             const data = JSON.parse(event.data);
 
             if (data.success === false)
@@ -57,10 +54,10 @@ function OpenWebSocket() {
                 alert("Wrong login!");
                 socket.close();
                 return;
-
-            } else {
-
-                // Open if successful
+            } 
+            else 
+            {
+                // open if successful
                 document.getElementById("inputText").disabled = false;
                 document.getElementById("sendButton").disabled = false;
                 document.getElementById("disconnectButton").disabled = false;
@@ -68,7 +65,7 @@ function OpenWebSocket() {
                 document.getElementById("nameText").disabled = true;
                 document.getElementById("password").disabled = true;  
 
-                // Send join message after successful authentication
+                // send join message after successful authentication
                 const joinMessage = JSON.stringify({
                     type: 1,
                     name: name
@@ -78,33 +75,35 @@ function OpenWebSocket() {
             }
 
         } else {
-            // For every other type of message
+            // for every other type of message
             console.log(event.data);
 
             const lastSpaceIndex = event.data.lastIndexOf(' ');
             const jsonString = event.data.substring(0, lastSpaceIndex);
-            const timestamp = event.data.substring(lastSpaceIndex + 1) || ""; // If there's no timestamp, set it to an empty string
+            const timestamp = event.data.substring(lastSpaceIndex + 1) || ""; // if there's no timestamp, set it to an empty string
     
-            // Parse the JSON string
+            // parse the JSON string
             const receivedObj = JSON.parse(jsonString);
     
-            // Add the timestamp to the parsed object
+            // add the timestamp to the parsed object
             receivedObj.timestamp = timestamp;
     
             const chatLine = GetChatLine(receivedObj);
     
-            const chatDiv = document.getElementById("chatDiv");            
-            chatDiv.appendChild(chatLine);
-        }
+            const chatDiv = document.getElementById("chatDiv");      
 
-        
+            chatDiv.appendChild(chatLine);
+
+            chatLine.scrollIntoView({ behavior: 'smooth' }); 
+        }
     };
  }
  
 function CloseWebSocket(){
      
-    // Disconnect message
-    const objToSend = {
+    // disconnect message
+    const objToSend = 
+    {
         type: 2,
         name: name
     }
@@ -131,6 +130,8 @@ function SendData(){
     const serializedObj = JSON.stringify(objToSend);
      
     socket.send(serializedObj);
+
+    serializedObj.scrollIntoView({ behavior: 'smooth' }); 
 }
  
 function GetChatLine(event){
@@ -140,18 +141,20 @@ function GetChatLine(event){
      
     newTag.classList.add('chat-tag');
      
-    if(event.type === 1){
-        // Join message
+    if(event.type === 1)
+    {
+        // join message
         newTag.classList.add('chat-tag--join');
         newTag.textContent = `${event.timestamp} ${event.name} has joined the chat.`;
-         
-    }else if(event.type === 2){
-        // Disconnect message
+    }
+    else if(event.type === 2)
+    {
+        // disconnect message
         newTag.classList.add('chat-tag--left');
         newTag.textContent = `${event.timestamp} ${event.name} has left the chat.`;
-     
-    }else{
-     
+    }
+    else
+    {
         newTag.classList.add('chat-tag--message');
         newTag.textContent = `${event.timestamp} ${event.name}`;
  
@@ -167,5 +170,4 @@ function GetChatLine(event){
     }
          
     return newChatEntryElement;
- 
 }
