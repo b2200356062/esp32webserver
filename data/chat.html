@@ -11,11 +11,11 @@
       <div class="main-container">
          <div class="u-display--flex connect-row">
             <input type="text" id="nameText" placeholder="Username" class="text-input u-flex-grow--1">
-            <input type="password" id="passText" placeholder="Password" class="text-input u-flex-grow--1">
+            <input type="password" id="password" placeholder="Password" class="text-input u-flex-grow--1">
          </div>
          <div class="u-display--flex connect-row">
-            <button onclick="OpenWebsocket()" id="connectButton" class="btn">CONNECT</button>
-            <button onclick="CloseWebsocket()" disabled id="disconnectButton" class="btn">DISCONNECT</button>
+            <button onclick="OpenWebSocket()" id="connectButton" class="btn">CONNECT</button>
+            <button onclick="CloseWebSocket()" disabled id="disconnectButton" class="btn">DISCONNECT</button>
          </div>
          <div class="chat-container">
             <div id="chatDiv" class="chat"></div>
