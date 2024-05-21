@@ -5,8 +5,8 @@
 #include <PubSubClient.h>
 #include <nlohmann/json.hpp>
  
-const char* ssid = "telefon";            //CHANGE
-const char* password =  "123456789";     //CHANGE 
+const char* ssid = "your ssid name";            //CHANGE
+const char* password =  "your ssid password";     //CHANGE 
 
 const char* mqttServer = "broker.emqx.io";
 const char* mqttUsername = "emqx";
